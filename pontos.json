@@ -1,0 +1,4 @@
+{
+  "nota": "Os dados usados pela V1 estão em pontos.js. Este JSON fica preparado para futura migração/API.",
+  "versao": 1
+}

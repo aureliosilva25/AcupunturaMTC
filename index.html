@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#071a18">
+  <meta name="description" content="MTC Acupuntura Pro - apoio ao estudo, anamnese e evolução em Medicina Tradicional Chinesa.">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="style.css">
+  <title>MTC Acupuntura Pro</title>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <button class="icon-btn" id="menuBtn" aria-label="Menu">☰</button>
+    <div class="brand"><span class="yin">☯</span><div><b>MTC Acupuntura</b><small>Assistente clínico e estudo</small></div></div>
+    <button class="icon-btn" id="installBtn" title="Instalar aplicativo">⬇</button>
+  </header>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="side-head"><span class="yin big">☯</span><b>MTC Acupuntura Pro</b></div>
+    <nav id="nav">
+      <button data-page="dashboard" class="active">⌂ <span>Início</span></button>
+      <button data-page="clientes">👤 <span>Clientes</span></button>
+      <button data-page="anamnese">📋 <span>Anamnese MTC</span></button>
+      <button data-page="analise">🧠 <span>Análise MTC</span></button>
+      <button data-page="evolucao">📈 <span>Evolução</span></button>
+      <button data-page="pontos">📍 <span>Pontos</span></button>
+      <button data-page="meridianos">〰 <span>Meridianos</span></button>
+      <button data-page="protocolos">🩺 <span>Protocolos</span></button>
+      <button data-page="config">⚙ <span>Configurações</span></button>
+    </nav>
+    <div class="side-note">Ferramenta educacional e de apoio ao raciocínio. Não substitui avaliação médica.</div>
+  </aside>
+  <div id="overlay" class="overlay"></div>
+
+  <main class="content">
+    <section id="dashboard" class="page active">
+      <div class="hero">
+        <div><span class="eyebrow">MEDICINA TRADICIONAL CHINESA</span><h1>Seu apoio clínico em MTC</h1><p>Anamnese guiada, diferenciação de padrões, pontos, técnicas complementares e evolução em um só lugar.</p></div>
+        <div class="hero-symbol">☯</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><span>👥</span><div><b id="statClientes">0</b><small>Clientes</small></div></div>
+        <div class="stat"><span>📋</span><div><b id="statAnamneses">0</b><small>Anamneses</small></div></div>
+        <div class="stat"><span>📈</span><div><b id="statEvolucoes">0</b><small>Evoluções</small></div></div>
+        <div class="stat"><span>📍</span><div><b id="statPontos">0</b><small>Pontos cadastrados</small></div></div>
+      </div>
+      <h2>Acesso rápido</h2>
+      <div class="quick-grid">
+        <button class="quick" data-go="anamnese"><span>📋</span><b>Nova anamnese</b><small>Investigação guiada MTC</small></button>
+        <button class="quick" data-go="analise"><span>🧠</span><b>Análise MTC</b><small>Hipóteses e princípios</small></button>
+        <button class="quick" data-go="pontos"><span>📍</span><b>Atlas de pontos</b><small>Pesquisa rápida</small></button>
+        <button class="quick" data-go="evolucao"><span>📈</span><b>Nova evolução</b><small>Acompanhe o tratamento</small></button>
+      </div>
+      <div class="notice"><b>⚕ Segurança clínica</b><p>O aplicativo organiza achados segundo referenciais tradicionais da MTC. Diagnósticos médicos, urgências, prescrição de medicamentos e decisões fora do escopo profissional exigem avaliação apropriada.</p></div>
+    </section>
+
+    <section id="clientes" class="page">
+      <div class="page-title"><div><span class="eyebrow">PRONTUÁRIO</span><h1>Clientes</h1></div><button class="primary" id="novoCliente">+ Novo cliente</button></div>
+      <div class="search"><span>⌕</span><input id="buscaCliente" placeholder="Pesquisar cliente..."></div>
+      <div id="listaClientes" class="cards"></div>
+      <div id="formCliente" class="panel hidden">
+        <h2>Cadastro do cliente</h2>
+        <form id="clienteForm" class="form-grid">
+          <input type="hidden" id="clienteId">
+          <label>Nome completo<input id="clienteNome" required></label>
+          <label>Data de nascimento<input id="clienteNascimento" type="date"></label>
+          <label>Telefone<input id="clienteTelefone" type="tel"></label>
+          <label>Profissão<input id="clienteProfissao"></label>
+          <label class="span2">Observações<textarea id="clienteObs"></textarea></label>
+          <div class="actions span2"><button type="button" class="secondary" id="cancelCliente">Cancelar</button><button class="primary">Salvar cliente</button></div>
+        </form>
+      </div>
+    </section>
+
+    <section id="anamnese" class="page">
+      <div class="page-title"><div><span class="eyebrow">INVESTIGAÇÃO GUIADA</span><h1>Anamnese MTC</h1><p>Cada etapa traz orientação sobre o que perguntar e observar.</p></div></div>
+      <div class="panel">
+        <label>Cliente<select id="anaCliente"></select></label>
+        <div id="anamneseForm"></div>
+        <div class="actions"><button class="secondary" id="limparAna">Limpar</button><button class="primary" id="salvarAna">Salvar e analisar →</button></div>
+      </div>
+    </section>
+
+    <section id="analise" class="page">
+      <div class="page-title"><div><span class="eyebrow">APOIO AO RACIOCÍNIO</span><h1>Análise MTC Assistida</h1><p>Hipóteses baseadas nos achados registrados, sem substituir julgamento profissional.</p></div></div>
+      <div class="panel">
+        <label>Cliente<select id="analiseCliente"></select></label>
+        <button class="primary full" id="gerarAnalise">✨ Analisar anamnese mais recente</button>
+      </div>
+      <div id="resultadoAnalise"></div>
+    </section>
+
+    <section id="evolucao" class="page">
+      <div class="page-title"><div><span class="eyebrow">ACOMPANHAMENTO</span><h1>Evolução clínica</h1></div></div>
+      <div class="panel">
+        <form id="evolucaoForm" class="form-grid">
+          <label>Cliente<select id="evoCliente" required></select></label>
+          <label>Data<input id="evoData" type="date" required></label>
+          <label>Queixa / estado atual<textarea id="evoQueixa"></textarea></label>
+          <label>Dor (0–10)<input id="evoDor" type="number" min="0" max="10"></label>
+          <label>Língua<textarea id="evoLingua"></textarea></label>
+          <label>Pulso<textarea id="evoPulso"></textarea></label>
+          <label class="span2">Padrão / princípio terapêutico<textarea id="evoPadrao"></textarea></label>
+          <label class="span2">Pontos e técnicas utilizadas<textarea id="evoTecnicas" placeholder="Ex.: E36, BP6; moxa indireta; aurículo Shen Men..."></textarea></label>
+          <label class="span2">Resposta à sessão e plano<textarea id="evoResposta"></textarea></label>
+          <div class="actions span2"><button class="primary">Salvar evolução</button></div>
+        </form>
+      </div>
+      <div id="listaEvolucoes" class="timeline"></div>
+    </section>
+
+    <section id="pontos" class="page">
+      <div class="page-title"><div><span class="eyebrow">ATLAS</span><h1>Pontos de Acupuntura</h1></div></div>
+      <div class="search"><span>⌕</span><input id="buscaPonto" placeholder="Pesquise P7, cefaleia, vento, lombar..."></div>
+      <div id="filtroMeridianos" class="chips"></div>
+      <div id="listaPontos" class="point-grid"></div>
+    </section>
+
+    <section id="meridianos" class="page">
+      <div class="page-title"><div><span class="eyebrow">CANAIS E COLATERAIS</span><h1>Meridianos</h1></div></div>
+      <div id="listaMeridianos" class="meridian-grid"></div>
+    </section>
+
+    <section id="protocolos" class="page">
+      <div class="page-title"><div><span class="eyebrow">REFERÊNCIA CLÍNICA</span><h1>Protocolos orientativos</h1><p>Selecione pelo padrão e adapte à avaliação individual.</p></div></div>
+      <div class="search"><span>⌕</span><input id="buscaProtocolo" placeholder="Ex.: lombalgia, insônia, estagnação..."></div>
+      <div id="listaProtocolos" class="cards"></div>
+    </section>
+
+    <section id="config" class="page">
+      <div class="page-title"><div><span class="eyebrow">SISTEMA</span><h1>Configurações</h1></div></div>
+      <div class="panel">
+        <h2>Dados</h2><p>Esta versão salva os prontuários somente neste navegador/dispositivo (localStorage). Não sincroniza dados clínicos com o GitHub.</p>
+        <div class="actions"><button class="secondary" id="exportar">Exportar backup JSON</button><label class="secondary file-btn">Importar backup<input type="file" id="importar" accept=".json"></label></div>
+        <hr><h2>Instalação</h2><p>Quando o navegador permitir, use o botão ⬇ no topo para instalar como aplicativo.</p>
+      </div>
+    </section>
+  </main>
+</div>
+<div id="toast" class="toast"></div>
+<script src="meridianos.js"></script>
+<script src="pontos.js"></script>
+<script src="protocolos.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
