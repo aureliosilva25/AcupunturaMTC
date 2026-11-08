@@ -4,6 +4,14 @@ const DB={
  set:(k,v)=>localStorage.setItem("mtc_"+k,JSON.stringify(v))
 };
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+// Snapshot único e não destrutivo dos prontuários antes da atualização da anamnese.
+try{
+ const backupKey='mtc_backup_pre_anamnese_v2';
+ if(!localStorage.getItem(backupKey)){
+  const snapshot={criadoEm:new Date().toISOString(),clientes:DB.get('clientes'),anamneses:DB.get('anamneses'),evolucoes:DB.get('evolucoes')};
+  localStorage.setItem(backupKey,JSON.stringify(snapshot));
+ }
+}catch(err){console.warn('Não foi possível criar cópia local preventiva:',err)}
 const toast=m=>{const t=$("#toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)};
 function go(page){$$(".page").forEach(x=>x.classList.toggle("active",x.id===page));$$("#nav button").forEach(x=>x.classList.toggle("active",x.dataset.page===page));$("#sidebar").classList.remove("open");$("#overlay").classList.remove("show");window.scrollTo(0,0);if(page==="dashboard")stats();if(page==="clientes")renderClientes();if(page==="evolucao")renderEvolucoes()}
 $$("#nav button").forEach(b=>b.onclick=()=>go(b.dataset.page));$$("[data-go]").forEach(b=>b.onclick=()=>go(b.dataset.go));
@@ -58,9 +66,57 @@ const ANAMNESE=[
 ]}
 ];
 
+let etapaAnamnese=0;
+const CAMPOS_INTELIGENTES={
+ dor:{label:'Aprofundamento da dor',fields:[['dor_presente','Existe dor atualmente?','select',['Sim','Não']],['dor_intensidade','Intensidade da dor (0 a 10)','number'],['dor_local','Localização / irradiação','text'],['dor_tipo','Característica predominante','select',['Pontada','Peso','Queimação','Choque','Latejante','Distensão','Cólica','Outra']],['dor_fatores','O que melhora ou piora?','text']],showWhen:{key:'dor_presente',value:'Sim'}},
+ temperatura:{label:'Padrão térmico',fields:[['temp_predominio','Predomínio percebido','select',['Sente mais frio','Sente mais calor','Alterna frio e calor','Sem alteração relevante']],['temp_regiao','Região e horário em que ocorre','text']]},
+ suor:{label:'Caracterização do suor',fields:[['suor_tipo','Como ocorre?','select',['Espontâneo durante o dia','Durante esforço','Noturno','Excessivo','Ausente ou muito reduzido','Não percebe alteração']],['suor_local','Localização e horário','text']],showWhen:{key:'suor_tipo',value:'Espontâneo durante o dia|Durante esforço|Noturno|Excessivo|Ausente ou muito reduzido'}},
+ sede:{label:'Padrão de sede e líquidos',fields:[['sede_intensidade','Intensidade da sede','select',['Sem sede','Pouca','Moderada','Intensa']],['sede_preferencia','Preferência de temperatura','select',['Gelada','Natural','Morna/quente','Indiferente']]]},
+ sono:{label:'Detalhamento do sono',fields:[['sono_padrao','Qual a principal dificuldade?','select',['Demora para dormir','Desperta durante a noite','Acorda muito cedo','Sono excessivo','Sono não reparador','Dorme bem']],['sono_horas','Quantas horas costuma dormir?','number'],['sono_horario','Horário habitual de dormir e acordar','text']]},
+ fezes:{label:'Caracterização intestinal',fields:[['fezes_padrao','Padrão predominante','select',['Regular/formada','Ressecada','Amolecida','Diarreia','Alternância entre constipação e diarreia','Muco ou sangue','Outro']],['fezes_frequencia','Frequência / esforço / urgência','text']]},
+ urina:{label:'Caracterização urinária',fields:[['urina_padrao','O que percebe?','select',['Sem alteração','Urina escura','Urina muito clara','Aumento da frequência','Noctúria','Dor ou ardor','Sangue','Dificuldade para urinar']],['urina_detalhe','Frequência, volume e outros detalhes','text']]},
+ ciclo:{label:'Detalhamento ginecológico (com consentimento)',fields:[['ciclo_status','Situação atual','select',['Ciclo regular','Ciclo irregular','Menopausa','Gestação','Pós-parto','Não se aplica / prefere não informar']],['ciclo_dor','Há cólicas ou dor?','select',['Sim','Não']],['ciclo_fluxo','Fluxo e duração','text']],showWhen:{key:'ciclo_status',value:'Ciclo regular|Ciclo irregular'}},
+ medicamentos:{label:'Segurança medicamentosa',fields:[['med_usa','Faz uso de medicamentos?','select',['Sim','Não','Não sabe informar']],['med_lista','Nome, dose se conhecida e finalidade','text']],showWhen:{key:'med_usa',value:'Sim|Não sabe informar'}},
+ gestacao:{label:'Segurança reprodutiva',fields:[['gestacao_status','Existe gestação ou possibilidade?','select',['Sim','Possibilidade','Não','Não se aplica / prefere não informar']],['gestacao_semana','Semanas de gestação (se aplicável)','number']],showWhen:{key:'gestacao_status',value:'Sim|Possibilidade'}},
+ dispositivos:{label:'Dispositivos implantados',fields:[['disp_status','Possui marcapasso ou dispositivo eletrônico implantado?','select',['Sim','Não','Não sabe informar']],['disp_detalhe','Qual dispositivo?','text']],showWhen:{key:'disp_status',value:'Sim|Não sabe informar'}},
+ lingua:{label:'Inspeção estruturada da língua',fields:[['lingua_cor','Cor do corpo da língua','select',['Pálida','Rosada','Vermelha','Vermelho-escura','Arroxeada/violácea','Outra / não avaliada']],['lingua_forma','Formato','select',['Normal','Edemaciada/inchada','Fina','Denteada','Fissurada','Outra / não avaliada']],['lingua_saburra','Saburra','select',['Ausente','Branca fina','Branca espessa','Amarela','Pegajosa','Irregular','Outra / não avaliada']],['lingua_umidade','Umidade','select',['Normal','Seca','Úmida','Muito úmida','Não avaliada']]]},
+ pulso:{label:'Pulsologia estruturada',fields:[['pulso_lado','Lado avaliado','select',['Direito','Esquerdo','Ambos','Não avaliado']],['pulso_profundidade','Profundidade','select',['Superficial','Profundo','Intermediário','Não avaliado']],['pulso_forca','Força','select',['Forte','Fraco','Moderado','Não avaliado']],['pulso_qualidade','Qualidade percebida','select',['Lento','Rápido','Tenso','Deslizante','Fino','Irregular','Outra / não avaliado']]]}
+};
+function smartFieldHTML(f){
+ const [key,label,type,opts]=f;const id='smart_'+key;
+ if(type==='select')return `<label class="smart-field">${label}<select id="${id}" data-q="${key}"><option value="">Selecione...</option>${opts.map(o=>`<option>${o}</option>`).join('')}</select></label>`;
+ return `<label class="smart-field">${label}<input id="${id}" data-q="${key}" type="${type}" ${type==='number'?'min="0"':''}></label>`;
+}
+function renderSmartFollowup(key){
+ const cfg=CAMPOS_INTELIGENTES[key];if(!cfg)return '';
+ return `<div class="smart-box"><b>＋ ${cfg.label}</b><div class="smart-grid">${cfg.fields.map(smartFieldHTML).join('')}</div></div>`;
+}
+function bindConditionalFields(){
+ Object.values(CAMPOS_INTELIGENTES).forEach(cfg=>{if(!cfg.showWhen)return;const trigger=$(`[data-q="${cfg.showWhen.key}"]`);const box=trigger?.closest('.question')?.querySelector('.smart-box');if(!trigger||!box)return;const update=()=>{const allowed=cfg.showWhen.value.split('|');box.classList.toggle('hidden',!allowed.includes(trigger.value))};trigger.addEventListener('change',update);update()});
+}
 function buildAnamnese(){
- $("#anamneseForm").innerHTML=ANAMNESE.map(s=>`<div class="question-section"><h2>${s.sec}</h2>${s.qs.map(q=>`<div class="question"><div class="q-head"><b>${q[1]}</b><button class="help-btn" type="button" aria-label="Como avaliar">i</button></div><div class="help"><b>Como investigar:</b> ${q[2]}</div><textarea data-q="${q[0]}" placeholder="Registre aqui a resposta e suas observações..."></textarea></div>`).join("")}</div>`).join("");
- $$(".help-btn").forEach(b=>b.onclick=()=>b.closest(".question").querySelector(".help").classList.toggle("show"));
+ const total=ANAMNESE.length;
+ const nav=`<div class="ana-progress"><div class="ana-progress-top"><b id="anaEtapaNome">Etapa 1 de ${total}</b><span id="anaPercent">0% preenchido</span></div><div class="ana-track"><span id="anaBar"></span></div><div class="ana-step-nav">${ANAMNESE.map((s,i)=>`<button type="button" data-step="${i}" class="ana-step ${i===0?'active':''}">${i+1}. ${s.sec}</button>`).join('')}</div></div>`;
+ const sections=ANAMNESE.map((s,i)=>`<div class="question-section ana-stage ${i===0?'active':''}" data-stage="${i}"><h2>${s.sec}</h2>${s.qs.map(q=>`<div class="question"><div class="q-head"><b>${q[1]}</b><button class="help-btn" type="button" aria-label="Como avaliar">i</button></div><div class="help"><b>Como investigar:</b> ${q[2]}</div>${renderSmartFollowup(q[0])}<textarea data-q="${q[0]}" placeholder="Registre a resposta livre, contexto e observações clínicas..."></textarea></div>`).join('')}<div class="ana-stage-actions"><button type="button" class="secondary ana-prev" ${i===0?'disabled':''}>← Etapa anterior</button><button type="button" class="primary ana-next">${i===total-1?'Revisar preenchimento':'Próxima etapa →'}</button></div></div>`).join('');
+ $('#anamneseForm').innerHTML=nav+sections;
+ $$('.help-btn').forEach(b=>b.onclick=()=>b.closest('.question').querySelector('.help').classList.toggle('show'));
+ $$('[data-step]').forEach(b=>b.onclick=()=>showAnaStage(Number(b.dataset.step)));
+ $$('.ana-next').forEach(b=>b.onclick=()=>{if(etapaAnamnese<total-1)showAnaStage(etapaAnamnese+1);else{toast('Etapas concluídas. Confira o cliente e use “Salvar e analisar”.');$('#salvarAna').scrollIntoView({behavior:'smooth',block:'center'})}});
+ $$('.ana-prev').forEach(b=>b.onclick=()=>showAnaStage(Math.max(0,etapaAnamnese-1)));
+ $('#anamneseForm').addEventListener('input',updateAnaProgress);
+ $('#anamneseForm').addEventListener('change',updateAnaProgress);
+ bindConditionalFields();updateAnaProgress();
+}
+function showAnaStage(index){
+ etapaAnamnese=Math.max(0,Math.min(index,ANAMNESE.length-1));
+ $$('.ana-stage').forEach(x=>x.classList.toggle('active',Number(x.dataset.stage)===etapaAnamnese));
+ $$('[data-step]').forEach(x=>x.classList.toggle('active',Number(x.dataset.step)===etapaAnamnese));
+ $('#anaEtapaNome').textContent=`Etapa ${etapaAnamnese+1} de ${ANAMNESE.length} • ${ANAMNESE[etapaAnamnese].sec}`;
+ $('#anamneseForm').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function updateAnaProgress(){
+ const fields=$$('#anamneseForm [data-q]');const filled=fields.filter(x=>String(x.value||'').trim()).length;const pct=fields.length?Math.round(filled/fields.length*100):0;
+ $('#anaPercent').textContent=`${pct}% preenchido (${filled}/${fields.length})`;$('#anaBar').style.width=pct+'%';
 }
 buildAnamnese();
 
@@ -83,10 +139,11 @@ $("#buscaCliente").oninput=e=>renderClientes(e.target.value);
 
 $("#salvarAna").onclick=()=>{
  const cid=$("#anaCliente").value;if(!cid)return toast("Selecione um cliente");
- const respostas={};$$("[data-q]").forEach(x=>respostas[x.dataset.q]=x.value.trim());
- let arr=DB.get("anamneses");arr.push({id:uid(),clienteId:cid,data:new Date().toISOString(),respostas});DB.set("anamneses",arr);stats();$("#analiseCliente").value=cid;toast("Anamnese salva");setTimeout(()=>go("analise"),500)
+ const respostas={};$$("[data-q]").forEach(x=>{respostas[x.dataset.q]=x.value.trim()});
+ const registro={id:uid(),clienteId:cid,data:new Date().toISOString(),respostas,versaoFormulario:2};
+ let arr=DB.get("anamneses");arr.push(registro);DB.set("anamneses",arr);stats();$("#analiseCliente").value=cid;toast("Anamnese salva sem alterar registros anteriores");setTimeout(()=>go("analise"),500)
 };
-$("#limparAna").onclick=()=>{if(confirm("Limpar as respostas atuais?"))$$("[data-q]").forEach(x=>x.value="")};
+$("#limparAna").onclick=()=>{if(confirm("Limpar as respostas atuais? Os registros já salvos não serão afetados.")){$$("[data-q]").forEach(x=>x.value="");bindConditionalFields();updateAnaProgress();showAnaStage(0)}};
 
 const RULES=[
 {nome:"Deficiência de Qi do Baço",keys:["fadiga","cansaço","fezes amolecidas","diarreia","pouco apetite","distensão","peso","língua pálida","marcas dentárias"],principio:"Fortalecer Baço e tonificar Qi conforme confirmação clínica.",pontos:["E36","BP6","VC12"],tecnicas:"Moxa pode ser considerada se houver sinais de Frio/deficiência e ausência de contraindicações. Massagem/shiatsu podem apoiar relaxamento e função digestiva."},
@@ -101,7 +158,7 @@ const RULES=[
 function latestAna(cid){return DB.get("anamneses").filter(a=>a.clienteId===cid).sort((a,b)=>b.data.localeCompare(a.data))[0]}
 function analyze(cid){
  const a=latestAna(cid);if(!a)return null;
- const text=Object.values(a.respostas).join(" ").toLowerCase();
+ const text=Object.values(a.respostas||{}).map(v=>Array.isArray(v)?v.join(" "):String(v??"")).join(" ").toLowerCase();
  return RULES.map(r=>{const hits=r.keys.filter(k=>text.includes(k));return {...r,hits,score:hits.length}}).filter(r=>r.score>0).sort((a,b)=>b.score-a.score).slice(0,5)
 }
 $("#gerarAnalise").onclick=()=>{
@@ -121,7 +178,7 @@ let filtroMer="";
 function renderPontos(){
  const q=$("#buscaPonto").value.toLowerCase();
  const arr=PONTOS.filter(p=>(!filtroMer||p.meridiano===filtroMer)&&JSON.stringify(p).toLowerCase().includes(q));
- $("#listaPontos").innerHTML=arr.map(p=>`<article class="point-card"><span class="point-code">${p.codigo}</span><h3>${p.nome}</h3><small>${p.categoria}</small><p><b>Localização:</b> ${p.local}</p><p><b>Funções MTC:</b> ${p.funcoes}</p><div>${p.indicacoes.map(i=>`<span class="tag">${i}</span>`).join("")}</div><p><b>Segurança:</b> ${p.seguranca}</p></article>`).join("")||'<div class="panel">Nenhum ponto encontrado.</div>'
+ $("#listaPontos").innerHTML=arr.map(p=>`<article class="point-card"><span class="point-code">${p.codigo}</span><h3>${p.nome}</h3><small>${p.categoria}</small><p><b>Localização:</b> ${p.local}</p><p><b>Funções MTC:</b> ${p.funcoes}</p><div>${p.indicacoes.map(i=>`<span class="tag">${i}</span>`).join("")}</div><p><b>Segurança:</b> ${p.seguranca}</p><div class="visual-box"><b>🖼️ Localização visual</b><p class="course-note">Consulte referências visuais externas e confirme a anatomia antes da aplicação.</p><button class="secondary" onclick="abrirImagemPonto(\'${p.codigo}\',\'${p.nome}\')">Ver imagens externas ↗</button></div></article>`).join("")||'<div class="panel">Nenhum ponto encontrado.</div>'
 }
 $("#filtroMeridianos").innerHTML='<button class="chip active" data-m="">Todos</button>'+MERIDIANOS.map(m=>`<button class="chip" data-m="${m.sigla}">${m.sigla}</button>`).join("");
 $$(".chip").forEach(b=>b.onclick=()=>{$$(".chip").forEach(x=>x.classList.remove("active"));b.classList.add("active");filtroMer=b.dataset.m;renderPontos()});
@@ -141,3 +198,10 @@ let deferredPrompt=null;window.addEventListener("beforeinstallprompt",e=>{e.prev
 $("#installBtn").onclick=async()=>{if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null}else toast("Use 'Adicionar à tela inicial' no menu do navegador")};
 if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 refreshSelects();renderClientes();renderEvolucoes();stats();
+function progressoCurso(id){const p=DB.get("progressoCursos",{});return p[id]||[]}
+function setAula(id,idx,done){const p=DB.get("progressoCursos",{}),a=new Set(p[id]||[]);done?a.add(idx):a.delete(idx);p[id]=[...a];DB.set("progressoCursos",p);renderCursos($("#buscaCurso")?.value||"")}
+function renderCursos(q=""){const arr=CURSOS.filter(c=>JSON.stringify(c).toLowerCase().includes(q.toLowerCase()));$("#listaCursos").innerHTML=arr.map(c=>{const n=progressoCurso(c.id).length,pc=Math.round(n/c.aulas.length*100);return `<div class="course-card" onclick="abrirCurso('${c.id}')"><div class="course-icon">${c.icone}</div><h3>${c.titulo}</h3><span class="tag">${c.nivel}</span><p>${c.desc}</p><div class="progress"><span style="width:${pc}%"></span></div><small>${n}/${c.aulas.length} aulas • ${pc}%</small></div>`}).join("")}
+window.abrirCurso=id=>{const c=CURSOS.find(x=>x.id===id),done=progressoCurso(id);$("#listaCursos").classList.add("hidden");$("#cursoDetalhe").classList.remove("hidden");$("#cursoDetalhe").innerHTML=`<button class="secondary" onclick="fecharCurso()">← Voltar</button><div class="hero" style="margin-top:14px"><div><span class="eyebrow">${c.nivel}</span><h1>${c.icone} ${c.titulo}</h1><p>${c.desc}</p></div></div><div class="notice"><b>Conteúdo educacional</b><p>Técnicas invasivas, térmicas ou com risco exigem formação prática, anatomia, biossegurança e atuação dentro das normas aplicáveis.</p></div><h2>Aulas</h2>${c.aulas.map((a,i)=>`<div class="lesson"><div class="lesson-head" onclick="this.parentElement.classList.toggle('open')"><input type="checkbox" ${done.includes(i)?"checked":""} onclick="event.stopPropagation();setAula('${c.id}',${i},this.checked)"><b>${i+1}. ${a[0]}</b><span>⌄</span></div><div class="lesson-body">${a[1]}<p><b>Para fixar:</b> marque a aula ao concluir e anote dúvidas para aprofundamento.</p></div></div>`).join("")}`;window.scrollTo(0,0)}
+window.fecharCurso=()=>{$("#cursoDetalhe").classList.add("hidden");$("#listaCursos").classList.remove("hidden");renderCursos($("#buscaCurso").value);window.scrollTo(0,0)}
+$("#buscaCurso").oninput=e=>renderCursos(e.target.value);renderCursos();
+window.abrirImagemPonto=(codigo,nome)=>{const q=encodeURIComponent(`${codigo} ${nome} acupuncture point location`);window.open(`https://commons.wikimedia.org/w/index.php?search=${q}&title=Special:MediaSearch&type=image`,"_blank","noopener")}

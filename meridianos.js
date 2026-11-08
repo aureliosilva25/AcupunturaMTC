@@ -12,5 +12,6 @@ const MERIDIANOS=[
 {sigla:"VB",nome:"Vesícula Biliar",yinYang:"Yang",elemento:"Madeira",horario:"23h–01h",pontos:44,descricao:"Canal Shao Yang do Pé. Percorre lateral da cabeça, tronco e membro inferior."},
 {sigla:"F",nome:"Fígado",yinYang:"Yin",elemento:"Madeira",horario:"01h–03h",pontos:14,descricao:"Canal Jue Yin do Pé. Tradicionalmente relacionado ao livre fluxo do Qi e armazenamento do Xue."},
 {sigla:"VC",nome:"Vaso Concepção",yinYang:"Extraordinário",elemento:"—",horario:"—",pontos:24,descricao:"Ren Mai. Percorre a linha média anterior e é tradicionalmente associado aos canais Yin."},
-{sigla:"VG",nome:"Vaso Governador",yinYang:"Extraordinário",elemento:"—",horario:"—",pontos:28,descricao:"Du Mai. Percorre a linha média posterior e é tradicionalmente associado aos canais Yang."}
+{sigla:"VG",nome:"Vaso Governador",yinYang:"Extraordinário",elemento:"—",horario:"—",pontos:28,descricao:"Du Mai. Percorre a linha média posterior e é tradicionalmente associado aos canais Yang."},
+{sigla:"Extra",nome:"Pontos Extraordinários",yinYang:"Extraordinário",elemento:"—",horario:"—",pontos:10,descricao:"Pontos extraordinários organizados separadamente dos 361 pontos clássicos dos 14 canais."}
 ];

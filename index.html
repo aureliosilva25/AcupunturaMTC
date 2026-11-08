@@ -30,6 +30,7 @@
       <button data-page="pontos">📍 <span>Pontos</span></button>
       <button data-page="meridianos">〰 <span>Meridianos</span></button>
       <button data-page="protocolos">🩺 <span>Protocolos</span></button>
+      <button data-page="cursos">🎓 <span>Academia MTC</span></button>
       <button data-page="config">⚙ <span>Configurações</span></button>
     </nav>
     <div class="side-note">Ferramenta educacional e de apoio ao raciocínio. Não substitui avaliação médica.</div>
@@ -77,7 +78,7 @@
     </section>
 
     <section id="anamnese" class="page">
-      <div class="page-title"><div><span class="eyebrow">INVESTIGAÇÃO GUIADA</span><h1>Anamnese MTC</h1><p>Cada etapa traz orientação sobre o que perguntar e observar.</p></div></div>
+      <div class="page-title"><div><span class="eyebrow">INVESTIGAÇÃO GUIADA</span><h1>Anamnese MTC</h1><p>Preenchimento por etapas, campos condicionais e acompanhamento do progresso.</p></div></div>
       <div class="panel">
         <label>Cliente<select id="anaCliente"></select></label>
         <div id="anamneseForm"></div>
@@ -131,7 +132,8 @@
       <div id="listaProtocolos" class="cards"></div>
     </section>
 
-    <section id="config" class="page">
+    <section id="cursos" class="page"><div class="page-title"><div><span class="eyebrow">ACADEMIA MTC</span><h1>Mini cursos</h1><p>Estude no seu ritmo e acompanhe seu progresso.</p></div></div><div class="search"><span>⌕</span><input id="buscaCurso" placeholder="Pesquisar curso..."></div><div id="listaCursos" class="course-grid"></div><div id="cursoDetalhe" class="hidden"></div></section>
+<section id="config" class="page">
       <div class="page-title"><div><span class="eyebrow">SISTEMA</span><h1>Configurações</h1></div></div>
       <div class="panel">
         <h2>Dados</h2><p>Esta versão salva os prontuários somente neste navegador/dispositivo (localStorage). Não sincroniza dados clínicos com o GitHub.</p>
@@ -145,6 +147,7 @@
 <script src="meridianos.js"></script>
 <script src="pontos.js"></script>
 <script src="protocolos.js"></script>
+<script src="cursos.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
