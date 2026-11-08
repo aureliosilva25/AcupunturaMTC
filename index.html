@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#071a18">
   <meta name="description" content="MTC Acupuntura Pro - apoio ao estudo, anamnese e evolução em Medicina Tradicional Chinesa.">
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="icon" href="icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="stylesheet" href="style.css">
   <title>MTC Acupuntura Pro</title>
@@ -15,12 +15,12 @@
 <div id="app">
   <header class="topbar">
     <button class="icon-btn" id="menuBtn" aria-label="Menu">☰</button>
-    <div class="brand"><span class="yin">☯</span><div><b>MTC Acupuntura</b><small>Assistente clínico e estudo</small></div></div>
+    <div class="brand"><img class="brand-logo" src="logo-mtc.png" alt="Símbolo MTC"><div><b>MTC Acupuntura</b><small>Assistente clínico e estudo</small></div></div>
     <button class="icon-btn" id="installBtn" title="Instalar aplicativo">⬇</button>
   </header>
 
   <aside id="sidebar" class="sidebar">
-    <div class="side-head"><span class="yin big">☯</span><b>MTC Acupuntura Pro</b></div>
+    <div class="side-head"><img class="side-logo" src="logo-mtc.png" alt="Símbolo MTC"><b>MTC Acupuntura Pro</b></div>
     <nav id="nav">
       <button data-page="dashboard" class="active">⌂ <span>Início</span></button>
       <button data-page="clientes">👤 <span>Clientes</span></button>
@@ -41,7 +41,7 @@
     <section id="dashboard" class="page active">
       <div class="hero">
         <div><span class="eyebrow">MEDICINA TRADICIONAL CHINESA</span><h1>Seu apoio clínico em MTC</h1><p>Anamnese guiada, diferenciação de padrões, pontos, técnicas complementares e evolução em um só lugar.</p></div>
-        <div class="hero-symbol">☯</div>
+        <img class="hero-symbol-img" src="logo-mtc.png" alt="Símbolo MTC">
       </div>
       <div class="stats">
         <div class="stat"><span>👥</span><div><b id="statClientes">0</b><small>Clientes</small></div></div>
@@ -78,7 +78,7 @@
     </section>
 
     <section id="anamnese" class="page">
-      <div class="page-title"><div><span class="eyebrow">INVESTIGAÇÃO GUIADA</span><h1>Anamnese MTC</h1><p>Preenchimento por etapas, campos condicionais e acompanhamento do progresso.</p></div></div>
+      <div class="page-title"><div><span class="eyebrow">INVESTIGAÇÃO GUIADA</span><h1>Anamnese MTC</h1><p>Cada etapa traz orientação sobre o que perguntar e observar.</p></div></div>
       <div class="panel">
         <label>Cliente<select id="anaCliente"></select></label>
         <div id="anamneseForm"></div>
@@ -136,7 +136,17 @@
 <section id="config" class="page">
       <div class="page-title"><div><span class="eyebrow">SISTEMA</span><h1>Configurações</h1></div></div>
       <div class="panel">
-        <h2>Dados</h2><p>Esta versão salva os prontuários somente neste navegador/dispositivo (localStorage). Não sincroniza dados clínicos com o GitHub.</p>
+        <h2>Sincronização entre dispositivos</h2>
+        <p>Os dados são mantidos localmente e podem ser sincronizados com seu projeto Supabase após configurar as credenciais e entrar com sua conta.</p>
+        <p id="cloudStatus" class="cloud-status" role="status">Verificando configuração…</p>
+        <form id="cloudLoginForm" class="cloud-login">
+          <label>E-mail<input id="cloudLoginEmail" type="email" autocomplete="username" required placeholder="Seu e-mail de acesso"></label>
+          <label>Senha<input id="cloudLoginPassword" type="password" autocomplete="current-password" required placeholder="Sua senha"></label>
+          <button class="primary" type="submit">Entrar e sincronizar</button>
+        </form>
+        <div id="cloudSessionPanel" class="actions hidden"><span id="cloudEmail"></span><button class="secondary" type="button" id="cloudSyncNow">Sincronizar agora</button><button class="secondary" type="button" id="cloudLogout">Sair</button></div>
+        <hr>
+        <h2>Dados e segurança</h2><p>Exporte backups regularmente. A primeira sincronização mescla os registros locais e da nuvem por identificador, sem apagar registros locais.</p>
         <div class="actions"><button class="secondary" id="exportar">Exportar backup JSON</button><label class="secondary file-btn">Importar backup<input type="file" id="importar" accept=".json"></label></div>
         <hr><h2>Instalação</h2><p>Quando o navegador permitir, use o botão ⬇ no topo para instalar como aplicativo.</p>
       </div>
@@ -149,5 +159,8 @@
 <script src="protocolos.js"></script>
 <script src="cursos.js"></script>
 <script src="app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="cloud-config.js"></script>
+<script src="cloud-sync.js"></script>
 </body>
 </html>
